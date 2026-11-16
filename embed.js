@@ -753,8 +753,8 @@ import { markdownToHtml } from "./markdown.js";
         padding: 3.2em 1.2em 1.2em;
         overflow: hidden;
         border-radius: 10px;
-        background: color-mix(in srgb, currentColor 7%, transparent);
-        border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+        background: rgba(128, 128, 128, 0.1);
+        border: 1px solid rgba(128, 128, 128, 0.3);
         color: inherit;
         text-align: left;
       }
