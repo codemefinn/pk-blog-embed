@@ -801,7 +801,7 @@ import { markdownToHtml } from "./markdown.js";
         width: 34px;
         height: 34px;
         padding: 0;
-        border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+        border: 1px solid rgba(128, 128, 128, 0.3);
         border-radius: 6px;
         background: transparent;
         color: inherit;
@@ -810,8 +810,8 @@ import { markdownToHtml } from "./markdown.js";
       }
 
       .pk-blog-code-block .pk-blog-copy-button:hover {
-        background: color-mix(in srgb, currentColor 10%, transparent);
-        border-color: color-mix(in srgb, currentColor 35%, transparent);
+        background: rgba(128, 128, 128, 0.1);
+        border-color: rgba(128, 128, 128, 0.5);
       }
 
       .pk-blog-code-block .pk-blog-copy-button svg {
