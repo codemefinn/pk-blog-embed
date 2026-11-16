@@ -28,6 +28,7 @@ import { markdownToHtml } from "./markdown.js";
       title: script.dataset.title || "",
       date: script.dataset.date || "",
       content: script.dataset.content || "",
+      tags: script.dataset.tags || "",
       pagination: script.dataset.pagination || "",
       articlesSection: script.dataset.articlesSection || "",
       articleSection: script.dataset.articleSection || "",
@@ -41,10 +42,14 @@ import { markdownToHtml } from "./markdown.js";
   const contentElement = document.getElementById(config.selectors.content);
   const pagination = document.getElementById(config.selectors.pagination);
   const template = list?.querySelector("li")?.cloneNode(true) ?? null;
+  const tagsList = document.getElementById(config.selectors.tags);
+  const tagsTemplate = tagsList?.querySelector("li")?.cloneNode(true) ?? null;
 
   let currentPage = 1;
   let allPosts = [];
   let galleryPosts = [];
+  let filteredPosts = [];
+  let activeTag = "";
   let postsPromise = null;
   let articleRequestId = 0;
 
@@ -373,6 +378,103 @@ import { markdownToHtml } from "./markdown.js";
   // galleryView
   // ------------------------------------------------------------
 
+  function getPostTags(post) {
+    if (!Array.isArray(post.tags)) return [];
+
+    return [
+      ...new Set(
+        post.tags
+          .filter((tag) => typeof tag === "string")
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+      ),
+    ];
+  }
+
+  function renderTags() {
+    if (!tagsList || !tagsTemplate) return;
+
+    const firstItem = tagsList.querySelector("li");
+    const firstLink = firstItem?.querySelector("a");
+
+    if (!firstItem || !firstLink) return;
+
+    // Keep the original first item and only update its count.
+    firstItem.dataset.pkBlogTag = "";
+
+    let countElement = firstLink.querySelector(".pk-blog-tags-count");
+
+    if (!countElement) {
+      countElement = document.createElement("span");
+      countElement.className = "pk-blog-tags-count";
+      firstLink.appendChild(countElement);
+    }
+
+    countElement.textContent = ` (${galleryPosts.length})`;
+
+    // Remove previously generated tag items.
+    Array.from(tagsList.children)
+      .slice(1)
+      .forEach((item) => item.remove());
+
+    // Count each tag once per published post.
+    const tagCounts = new Map();
+
+    galleryPosts.forEach((post) => {
+      getPostTags(post).forEach((tag) => {
+        tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+      });
+    });
+
+    // Display tags alphabetically.
+    const sortedTags = [...tagCounts.entries()].sort((a, b) =>
+      a[0].localeCompare(b[0]),
+    );
+
+    sortedTags.forEach(([tag, count], index) => {
+      const item = tagsTemplate.cloneNode(true);
+      const link = item.querySelector("a");
+
+      if (!link) return;
+
+      // Update the Carrd list item number.
+      item.className = item.className.replace(
+        /\bn\d+\b/,
+        `n${String(index + 2).padStart(2, "0")}`,
+      );
+
+      item.dataset.pkBlogTag = tag;
+
+      link.href = "#";
+      link.textContent = `${tag} (${count})`;
+
+      tagsList.appendChild(item);
+    });
+  }
+
+  function initTags() {
+    if (!tagsList || !tagsTemplate) return;
+
+    tagsList.addEventListener("click", (event) => {
+      const link = event.target.closest("a");
+
+      if (!link || !tagsList.contains(link)) return;
+
+      const item = link.closest("li");
+
+      if (!item || !item.hasAttribute("data-pk-blog-tag")) {
+        return;
+      }
+
+      event.preventDefault();
+
+      activeTag = item.dataset.pkBlogTag;
+      currentPage = 1;
+
+      renderGallery(allPosts);
+    });
+  }
+
   function renderPagination(totalPages) {
     if (!pagination) return;
 
@@ -504,7 +606,7 @@ import { markdownToHtml } from "./markdown.js";
 
       event.preventDefault();
 
-      const totalPages = Math.ceil(galleryPosts.length / config.postsPerPage);
+      const totalPages = Math.ceil(filteredPosts.length / config.postsPerPage);
       if (pageButton) {
         currentPage = Number(pageButton.dataset.page);
       } else if (link.matches(".n01")) {
@@ -526,16 +628,24 @@ import { markdownToHtml } from "./markdown.js";
     // Only display published posts in the gallery.
     galleryPosts = allPosts.filter((post) => post.published === true);
 
-    const totalPages = Math.ceil(galleryPosts.length / config.postsPerPage);
+    // Update the tag list using all published posts.
+    renderTags();
+
+    // Apply the selected tag filter.
+    filteredPosts = activeTag
+      ? galleryPosts.filter((post) => getPostTags(post).includes(activeTag))
+      : galleryPosts;
+
+    const totalPages = Math.ceil(filteredPosts.length / config.postsPerPage);
     currentPage = Math.max(1, Math.min(currentPage, Math.max(totalPages, 1)));
 
     const startIndex = (currentPage - 1) * config.postsPerPage;
-    const visiblePosts = galleryPosts.slice(
+    const visiblePosts = filteredPosts.slice(
       startIndex,
       startIndex + config.postsPerPage,
     );
 
-    if (!galleryPosts.length) {
+    if (!filteredPosts.length) {
       list.replaceChildren();
       const message = document.createElement("li");
       message.textContent = "No posts found.";
@@ -1176,6 +1286,7 @@ import { markdownToHtml } from "./markdown.js";
     initSectionNavigation();
     initArticleNavigation();
     initPagination();
+    initTags();
     initCodeCopy();
 
     const slug = getPostSlug();
