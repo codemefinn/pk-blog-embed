@@ -922,12 +922,18 @@ import { markdownToHtml } from "./markdown.js";
         gap: 0.5em;
         min-width: 0;
         color: inherit;
-        text-decoration: none;
+        text-decoration: none !important;
       }
 
       .pk-blog-post-navigation-next {
         justify-self: end;
         text-align: right;
+        grid-column: 2;
+      }
+
+      .pk-blog-post-navigation-arrow {
+        flex-shrink: 0;
+        text-decoration: none !important;
       }
 
       .pk-blog-post-navigation-title {
