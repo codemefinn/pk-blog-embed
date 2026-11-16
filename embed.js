@@ -933,7 +933,6 @@ import { markdownToHtml } from "./markdown.js";
 
       .pk-blog-post-navigation-arrow {
         flex-shrink: 0;
-        text-decoration: none !important;
       }
 
       .pk-blog-post-navigation-title {
@@ -942,6 +941,7 @@ import { markdownToHtml } from "./markdown.js";
         -webkit-line-clamp: 2;
         overflow: hidden;
         overflow-wrap: anywhere;
+        text-decoration: underline;
       }
 
       .pk-blog-post-navigation a:hover .pk-blog-post-navigation-title {
