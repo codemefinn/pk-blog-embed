@@ -884,6 +884,118 @@ import { markdownToHtml } from "./markdown.js";
     });
   }
 
+  function renderPostNavigation(post) {
+    if (!contentElement) return;
+
+    // Get published posts in the existing date order.
+    const publishedPosts = allPosts.filter((item) => item.published === true);
+
+    const currentIndex = publishedPosts.findIndex(
+      (item) => item.slug === post.slug,
+    );
+
+    if (currentIndex === -1) return;
+
+    // Posts are sorted newest first.
+    const previousPost = publishedPosts[currentIndex + 1];
+    const nextPost = publishedPosts[currentIndex - 1];
+
+    if (!previousPost && !nextPost) return;
+
+    // Add navigation styles once.
+    if (!document.getElementById("pk-blog-post-navigation-styles")) {
+      const style = document.createElement("style");
+      style.id = "pk-blog-post-navigation-styles";
+      style.textContent = `
+      .pk-blog-post-navigation {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 1.5rem;
+        margin-top: 2.5em;
+        padding-top: 1.25em;
+        border-top: 1px solid rgba(128, 128, 128, 0.3);
+      }
+
+      .pk-blog-post-navigation a {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5em;
+        min-width: 0;
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .pk-blog-post-navigation-next {
+        justify-self: end;
+        text-align: right;
+      }
+
+      .pk-blog-post-navigation-title {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        overflow-wrap: anywhere;
+      }
+
+      .pk-blog-post-navigation a:hover .pk-blog-post-navigation-title {
+        text-decoration: underline;
+      }
+
+      .pk-blog-post-navigation-arrow {
+        flex-shrink: 0;
+      }
+
+      @media (max-width: 600px) {
+        .pk-blog-post-navigation {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 0.85rem;
+        }
+
+        .pk-blog-post-navigation-next {
+          justify-self: start;
+          text-align: left;
+        }
+      }
+    `;
+
+      document.head.appendChild(style);
+    }
+
+    const navigation = document.createElement("nav");
+    navigation.className = "pk-blog-post-navigation";
+
+    function createNavigationLink(targetPost, direction) {
+      if (!targetPost) return;
+
+      const link = document.createElement("a");
+      link.href = getArticleUrl(targetPost.slug);
+      link.className = `pk-blog-post-navigation-${direction}`;
+
+      const arrow = document.createElement("span");
+      arrow.className = "pk-blog-post-navigation-arrow";
+      arrow.textContent = direction === "previous" ? "←" : "→";
+      arrow.setAttribute("aria-hidden", "true");
+
+      const title = document.createElement("span");
+      title.className = "pk-blog-post-navigation-title";
+      title.textContent = targetPost.title;
+
+      if (direction === "previous") {
+        link.append(arrow, title);
+      } else {
+        link.append(title, arrow);
+      }
+
+      navigation.appendChild(link);
+    }
+
+    createNavigationLink(previousPost, "previous");
+    createNavigationLink(nextPost, "next");
+
+    contentElement.appendChild(navigation);
+  }
+
   function renderArticle(post) {
     if (!post) {
       if (titleElement) titleElement.textContent = "Article not found.";
@@ -905,6 +1017,7 @@ import { markdownToHtml } from "./markdown.js";
 
     if (contentElement) {
       contentElement.innerHTML = markdownToHtml(post.content || "");
+      renderPostNavigation(post);
     }
   }
 
