@@ -265,17 +265,25 @@ import { markdownToHtml } from "./markdown.js";
 
       posts.sort((a, b) => b.date.localeCompare(a.date));
 
-      allPosts = posts;
+      // Add publication status based on the current UTC date.
+      const today = new Date().toISOString().slice(0, 10);
+
+      const publishedPosts = posts.map((post) => ({
+        ...post,
+        published: /^\d{4}-\d{2}-\d{2}$/.test(post.date) && post.date <= today,
+      }));
+
+      allPosts = publishedPosts;
       postsLoaded = true;
       postsFetchedAt = Date.now();
 
       window.carrdBlog = {
-        posts,
+        posts: publishedPosts,
         errors: [],
         loading: false,
       };
 
-      return posts;
+      return publishedPosts;
     })();
 
     try {
@@ -419,7 +427,7 @@ import { markdownToHtml } from "./markdown.js";
       button.setAttribute("aria-label", `Page ${pageNumber}`);
 
       button.style.fontFamily = style?.fontFamily || "inherit";
-      button.style.fontSize = style?.fontSize || "inherit";
+      // button.style.fontSize = style?.fontSize || "inherit";
       button.style.color = style?.color || "inherit";
       button.style.background = "transparent";
       button.style.border = "0";
