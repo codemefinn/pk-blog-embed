@@ -44,6 +44,7 @@ import { markdownToHtml } from "./markdown.js";
 
   let currentPage = 1;
   let allPosts = [];
+  let galleryPosts = [];
   let postsPromise = null;
   let articleRequestId = 0;
 
@@ -301,7 +302,7 @@ import { markdownToHtml } from "./markdown.js";
     const posts = await fetchPosts();
     const summary = posts.find((post) => post.slug === slug);
 
-    if (!summary) {
+    if (!summary || summary.published !== true) {
       throw new Error("Article not found.");
     }
 
@@ -498,7 +499,7 @@ import { markdownToHtml } from "./markdown.js";
 
       event.preventDefault();
 
-      const totalPages = Math.ceil(allPosts.length / config.postsPerPage);
+      const totalPages = Math.ceil(galleryPosts.length / config.postsPerPage);
       if (pageButton) {
         currentPage = Number(pageButton.dataset.page);
       } else if (link.matches(".n01")) {
@@ -516,16 +517,20 @@ import { markdownToHtml } from "./markdown.js";
     if (!list || !template) return;
 
     allPosts = posts;
-    const totalPages = Math.ceil(allPosts.length / config.postsPerPage);
+
+    // Only display published posts in the gallery.
+    galleryPosts = allPosts.filter((post) => post.published === true);
+
+    const totalPages = Math.ceil(galleryPosts.length / config.postsPerPage);
     currentPage = Math.max(1, Math.min(currentPage, Math.max(totalPages, 1)));
 
     const startIndex = (currentPage - 1) * config.postsPerPage;
-    const visiblePosts = allPosts.slice(
+    const visiblePosts = galleryPosts.slice(
       startIndex,
       startIndex + config.postsPerPage,
     );
 
-    if (!allPosts.length) {
+    if (!galleryPosts.length) {
       list.replaceChildren();
       const message = document.createElement("li");
       message.textContent = "No posts found.";
