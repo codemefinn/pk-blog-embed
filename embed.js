@@ -411,6 +411,8 @@ import { markdownToHtml } from "./markdown.js";
     }
 
     countElement.textContent = ` (${galleryPosts.length})`;
+    firstLink.style.fontWeight = activeTag === "" ? "700" : "";
+    firstLink.style.textDecoration = activeTag === "" ? "none" : "";
 
     // Remove previously generated tag items.
     Array.from(tagsList.children)
@@ -447,6 +449,11 @@ import { markdownToHtml } from "./markdown.js";
 
       link.href = "#";
       link.textContent = `${tag} (${count})`;
+
+      if (activeTag === tag) {
+        link.style.fontWeight = "700";
+        link.style.textDecoration = "none";
+      }
 
       tagsList.appendChild(item);
     });
