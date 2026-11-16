@@ -56,6 +56,11 @@ import { markdownToHtml } from "./markdown.js";
   let postsLoaded = false;
   const POSTS_CACHE_TTL = 60 * 1000;
 
+  // Preserve the original page metadata.
+  const originalDocumentTitle = document.title;
+  let descriptionMeta = document.querySelector('meta[name="description"]');
+  const originalDescription = descriptionMeta?.content ?? null;
+
   const API_URL = `https://api.github.com/repos/${config.owner}/${config.repo}/git/trees/${config.branch}?recursive=1`;
   const RAW_BASE_URL = `https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch}/`;
 
@@ -609,6 +614,29 @@ import { markdownToHtml } from "./markdown.js";
   // articleView
   // ------------------------------------------------------------
 
+  function updateDocumentMetadata(post) {
+    document.title = post.title || originalDocumentTitle;
+
+    if (!descriptionMeta) {
+      descriptionMeta = document.createElement("meta");
+      descriptionMeta.name = "description";
+      document.head.appendChild(descriptionMeta);
+    }
+
+    descriptionMeta.content = post.excerpt || "";
+  }
+
+  function restoreDocumentMetadata() {
+    document.title = originalDocumentTitle;
+
+    if (originalDescription === null) {
+      descriptionMeta?.remove();
+      descriptionMeta = null;
+    } else if (descriptionMeta) {
+      descriptionMeta.content = originalDescription;
+    }
+  }
+
   function renderAuthor(post) {
     if (!dateElement) return;
 
@@ -718,6 +746,8 @@ import { markdownToHtml } from "./markdown.js";
       return;
     }
 
+    updateDocumentMetadata(post);
+
     if (titleElement) {
       titleElement.innerHTML = markdownToHtml(post.title || "Untitled");
     }
@@ -743,6 +773,8 @@ import { markdownToHtml } from "./markdown.js";
   }
 
   async function loadCurrentGallery() {
+    restoreDocumentMetadata();
+
     if (!list || !template) return;
     try {
       const posts = await fetchPosts();
