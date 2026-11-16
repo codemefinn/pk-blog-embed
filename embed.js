@@ -3,7 +3,6 @@ import { markdownToHtml } from "./markdown.js";
 (function initCarrdBlog() {
   // ------------------------------------------------------------
   // Configuration
-  // Update these IDs to match your Carrd elements.
   // ------------------------------------------------------------
   const script = document.querySelector(
     'script[src*="/pk-blog-embed@"][type="module"][data-owner][data-repo]',
