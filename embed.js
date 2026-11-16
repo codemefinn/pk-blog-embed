@@ -741,33 +741,144 @@ import { markdownToHtml } from "./markdown.js";
   function initCodeCopy() {
     if (!contentElement) return;
 
+    // Add code block styles once.
+    if (!document.getElementById("pk-blog-code-styles")) {
+      const style = document.createElement("style");
+      style.id = "pk-blog-code-styles";
+      style.textContent = `
+      .pk-blog-code-block {
+        position: relative;
+        box-sizing: border-box;
+        margin: 1.25em 0;
+        padding: 3.2em 1.2em 1.2em;
+        overflow: hidden;
+        border-radius: 10px;
+        background: color-mix(in srgb, currentColor 7%, transparent);
+        border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+        color: inherit;
+        text-align: left;
+      }
+
+      .pk-blog-code-block pre {
+        display: block !important;
+        box-sizing: border-box;
+        max-width: 100%;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow-x: auto;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        color: inherit !important;
+        white-space: pre !important;
+        text-align: left;
+        line-height: 1.6;
+      }
+
+      .pk-blog-code-block pre code {
+        display: block !important;
+        width: max-content;
+        min-width: 100%;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        color: inherit !important;
+        font-family: Consolas, Monaco, "Courier New", monospace !important;
+        font-size: 0.875em;
+        line-height: inherit;
+        white-space: pre !important;
+      }
+
+      .pk-blog-code-block .pk-blog-copy-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+        border-radius: 6px;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
+      }
+
+      .pk-blog-code-block .pk-blog-copy-button:hover {
+        background: color-mix(in srgb, currentColor 10%, transparent);
+        border-color: color-mix(in srgb, currentColor 35%, transparent);
+      }
+
+      .pk-blog-code-block .pk-blog-copy-button svg {
+        display: block;
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .pk-blog-code-block .pk-blog-copy-button:disabled {
+        opacity: 0.8;
+        cursor: default;
+      }
+    `;
+
+      document.head.appendChild(style);
+    }
+
+    const copyIcon =
+      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+      '<rect x="8" y="8" width="12" height="12" rx="2"></rect>' +
+      '<path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"></path>' +
+      "</svg>";
+
+    const checkIcon =
+      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+      '<path d="m5 12 4 4L19 6"></path>' +
+      "</svg>";
+
+    // Use event delegation for dynamically rendered articles.
     contentElement.addEventListener("click", async (event) => {
       const button = event.target.closest("[data-cms-copy-code]");
 
       if (!button || !contentElement.contains(button)) return;
 
-      const codeBlock = button.closest(".carrd-blog-code-block");
+      const codeBlock = button.closest(".pk-blog-code-block");
       const code = codeBlock?.querySelector("pre code");
 
-      if (!code) return;
+      if (!code || button.disabled) return;
 
       try {
         await navigator.clipboard.writeText(code.textContent);
 
-        button.textContent = "Copied!";
+        button.innerHTML = checkIcon;
+        button.setAttribute("aria-label", "Copied");
+        button.title = "Copied";
         button.disabled = true;
 
         setTimeout(() => {
-          button.textContent = "Copy";
+          button.innerHTML = copyIcon;
+          button.setAttribute("aria-label", "Copy code");
+          button.title = "Copy code";
           button.disabled = false;
         }, 1500);
       } catch (error) {
-        console.error("[Carrd Blog] Unable to copy code:", error);
+        console.error("[PK Blog] Unable to copy code:", error);
 
-        button.textContent = "Copy failed";
+        button.setAttribute("aria-label", "Copy failed");
+        button.title = "Copy failed";
 
         setTimeout(() => {
-          button.textContent = "Copy";
+          button.setAttribute("aria-label", "Copy code");
+          button.title = "Copy code";
         }, 1500);
       }
     });

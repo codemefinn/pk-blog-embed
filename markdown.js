@@ -333,9 +333,14 @@ export function markdownToHtml(markdown) {
       const code = codeLines.length ? codeLines.join("\n") + "\n" : "";
 
       output.push(
-        '<div class="carrd-blog-code-block">' +
-          '<button type="button" data-cms-copy-code>Copy</button>' +
-          "<pre><code" +
+        '<div class="pk-blog-code-block">' +
+          '<button type="button" class="pk-blog-copy-button" data-cms-copy-code aria-label="Copy code" title="Copy code">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+          '<rect x="8" y="8" width="12" height="12" rx="2"></rect>' +
+          '<path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"></path>' +
+          "</svg>" +
+          "</button>" +
+          +"<pre><code" +
           (language ? ' data-language="' + escapeHtml(language) + '"' : "") +
           ">" +
           escapeHtml(code) +
@@ -361,7 +366,7 @@ export function markdownToHtml(markdown) {
       };
 
       output.push(
-        '<div class="carrd-blog-heading carrd-blog-heading-' +
+        '<div class="pk-blog-heading pk-blog-heading-' +
           level +
           '" style="font-size:' +
           sizes[level] +
