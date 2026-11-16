@@ -294,34 +294,90 @@ export function markdownToHtml(markdown) {
     .replace(/\r\n?/g, "\n")
     .split("\n");
 
-  return lines
-    .map(function (line) {
-      // Markdown headings: # through ######
-      const headingMatch = line.match(/^(#{1,6})[ \t]+(.+?)\s*#*\s*$/);
+  const output = [];
+  let i = 0;
 
-      if (headingMatch) {
-        const level = headingMatch[1].length;
-        const content = parseInline(headingMatch[2]);
+  while (i < lines.length) {
+    const line = lines[i];
 
-        const sizes = {
-          1: "2em",
-          2: "1.5em",
-          3: "1.25em",
-          4: "1.125em",
-        };
+    // Detect opening fenced code blocks (backticks or tildes).
+    const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
 
-        return (
-          '<div class="carrd-blog-heading carrd-blog-heading-' +
+    if (fenceMatch) {
+      const fence = fenceMatch[1];
+      const fenceChar = fence[0];
+      const fenceLength = fence.length;
+      const language = fenceMatch[2].trim().split(/\s+/)[0] || "";
+
+      const codeLines = [];
+      i++;
+
+      // Collect code until a matching closing fence is found.
+      while (i < lines.length) {
+        const closingMatch = lines[i].match(/^ {0,3}(`+|~+)[ \t]*$/);
+
+        if (
+          closingMatch &&
+          closingMatch[1][0] === fenceChar &&
+          closingMatch[1].length >= fenceLength
+        ) {
+          i++;
+          break;
+        }
+
+        codeLines.push(lines[i]);
+        i++;
+      }
+
+      // Preserve the original code content without inline Markdown parsing.
+      const code = codeLines.length ? codeLines.join("\n") + "\n" : "";
+
+      output.push(
+        '<div class="carrd-blog-code-block">' +
+          '<button type="button" data-cms-copy-code>Copy</button>' +
+          "<pre><code" +
+          (language ? ' data-language="' + escapeHtml(language) + '"' : "") +
+          ">" +
+          escapeHtml(code) +
+          "</code></pre>" +
+          "</div>",
+      );
+
+      continue;
+    }
+
+    // Keep the existing heading parser unchanged.
+    const headingMatch = line.match(/^(#{1,6})[ \t]+(.+?)\s*#*\s*$/);
+
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const content = parseInline(headingMatch[2]);
+
+      const sizes = {
+        1: "2em",
+        2: "1.5em",
+        3: "1.25em",
+        4: "1.125em",
+      };
+
+      output.push(
+        '<div class="carrd-blog-heading carrd-blog-heading-' +
           level +
           '" style="font-size:' +
           sizes[level] +
           ';font-weight:700;line-height:1.3;margin:0.8em 0 0.4em;">' +
           content +
-          "</div>"
-        );
-      }
+          "</div>",
+      );
 
-      return parseInline(line);
-    })
-    .join("<br>\n");
+      i++;
+      continue;
+    }
+
+    // Keep existing inline Markdown parsing.
+    output.push(parseInline(line));
+    i++;
+  }
+
+  return output.join("<br>\n");
 }

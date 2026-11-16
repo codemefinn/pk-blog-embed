@@ -738,6 +738,41 @@ import { markdownToHtml } from "./markdown.js";
     authorElement.appendChild(content);
   }
 
+  function initCodeCopy() {
+    if (!contentElement) return;
+
+    contentElement.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-cms-copy-code]");
+
+      if (!button || !contentElement.contains(button)) return;
+
+      const codeBlock = button.closest(".carrd-blog-code-block");
+      const code = codeBlock?.querySelector("pre code");
+
+      if (!code) return;
+
+      try {
+        await navigator.clipboard.writeText(code.textContent);
+
+        button.textContent = "Copied!";
+        button.disabled = true;
+
+        setTimeout(() => {
+          button.textContent = "Copy";
+          button.disabled = false;
+        }, 1500);
+      } catch (error) {
+        console.error("[Carrd Blog] Unable to copy code:", error);
+
+        button.textContent = "Copy failed";
+
+        setTimeout(() => {
+          button.textContent = "Copy";
+        }, 1500);
+      }
+    });
+  }
+
   function renderArticle(post) {
     if (!post) {
       if (titleElement) titleElement.textContent = "Article not found.";
@@ -911,6 +946,7 @@ import { markdownToHtml } from "./markdown.js";
     initSectionNavigation();
     initArticleNavigation();
     initPagination();
+    initCodeCopy();
 
     const slug = getPostSlug();
 
