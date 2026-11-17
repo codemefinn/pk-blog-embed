@@ -626,6 +626,68 @@ import { markdownToHtml } from "./markdown.js";
     });
   }
 
+  function renderPinIcon(item, post) {
+    const existingPin = item.querySelector(".pk-blog-pin");
+    item.classList.add("pk-blog-gallery-item");
+
+    // Remove the icon if the post is not pinned.
+    if (post.pin !== true) {
+      existingPin?.remove();
+      return;
+    }
+
+    // Avoid creating duplicate icons.
+    if (existingPin) return;
+
+    const pin = document.createElement("span");
+    pin.className = "pk-blog-pin";
+    pin.setAttribute("aria-label", "Pinned");
+    pin.title = "Pinned";
+
+    pin.innerHTML =
+      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+      '<path d="M16 3H8l1 6-3 3v2h5v7l1 1 1-1v-7h5v-2l-3-3 1-6Z"></path>' +
+      "</svg>";
+
+    item.appendChild(pin);
+  }
+
+  if (!document.getElementById("pk-blog-pin-styles")) {
+    const style = document.createElement("style");
+    style.id = "pk-blog-pin-styles";
+
+    style.textContent = `
+    .pk-blog-gallery-item {
+      position: relative;
+    }
+
+    .pk-blog-pin {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.45);
+      color: #fff;
+      pointer-events: none;
+    }
+
+    .pk-blog-pin svg {
+      display: block;
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+  `;
+
+    document.head.appendChild(style);
+  }
+
   function renderGallery(posts) {
     if (!list || !template) return;
 
@@ -633,6 +695,13 @@ import { markdownToHtml } from "./markdown.js";
 
     // Only display published posts in the gallery.
     galleryPosts = allPosts.filter((post) => post.published === true);
+
+    // Pinned posts appear first, followed by the original date order.
+    galleryPosts.sort(
+      (a, b) =>
+        Number(b.pin === true) - Number(a.pin === true) ||
+        b.date.localeCompare(a.date),
+    );
 
     // Update the tag list using all published posts.
     renderTags();
@@ -718,6 +787,8 @@ import { markdownToHtml } from "./markdown.js";
 
         postCardCache.set(post.slug, item);
       }
+
+      renderPinIcon(item, post);
 
       return item;
     });
