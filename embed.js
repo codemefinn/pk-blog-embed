@@ -824,6 +824,26 @@ import { markdownToHtml } from "./markdown.js";
     }
   }
 
+  // Apply title and description from the posts.json summary right away,
+  // without waiting for the article markdown to load.
+  function previewDocumentMetadata(slug) {
+    const summary = allPosts.find(
+      (post) => post.slug === slug && post.published === true,
+    );
+    if (!summary) return;
+
+    if (summary.title) document.title = summary.title;
+
+    if (summary.excerpt) {
+      if (!descriptionMeta) {
+        descriptionMeta = document.createElement("meta");
+        descriptionMeta.name = "description";
+        document.head.appendChild(descriptionMeta);
+      }
+      descriptionMeta.content = summary.excerpt;
+    }
+  }
+
   function renderAuthor(post) {
     if (!dateElement) return;
 
@@ -1249,6 +1269,10 @@ import { markdownToHtml } from "./markdown.js";
     if (contentElement) contentElement.replaceChildren();
 
     try {
+      await fetchPosts();
+      if (requestId !== articleRequestId) return;
+      previewDocumentMetadata(slug);
+
       const post = await fetchPost(slug);
       if (requestId !== articleRequestId) return;
       renderArticle(post);
@@ -1291,6 +1315,8 @@ import { markdownToHtml } from "./markdown.js";
       event.preventDefault();
 
       const slug = url.searchParams.get("slug");
+
+      previewDocumentMetadata(slug);
 
       history.pushState(
         {
