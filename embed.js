@@ -1260,8 +1260,23 @@ import { markdownToHtml } from "./markdown.js";
 
   function initArticleNavigation() {
     document.addEventListener("click", (event) => {
+      // 修飾鍵、非左鍵、已被別人處理的點擊，交給瀏覽器預設行為
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
       const link = event.target.closest("a[href]");
       if (!link) return;
+
+      // 指定在新視窗或其他框架開啟的連結，也不攔截
+      if (link.target && link.target !== "_self") return;
 
       const url = new URL(link.href, window.location.href);
 
