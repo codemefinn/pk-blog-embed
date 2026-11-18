@@ -1306,18 +1306,21 @@ import { markdownToHtml } from "./markdown.js";
     });
 
     window.addEventListener("popstate", () => {
-      window.dispatchEvent(new HashChangeEvent("hashchange"));
-
       const url = new URL(window.location.href);
       let slug = url.searchParams.get("slug");
+      const isArticle =
+        window.location.hash === `#${config.selectors.articleSection}`;
 
-      if (window.location.hash === `#${config.selectors.articleSection}`) {
-        if (!slug && history.state?.cmsArticleSlug) {
-          slug = history.state.cmsArticleSlug;
-          url.searchParams.set("slug", slug);
-          history.replaceState(history.state, "", url);
-        }
+      // Restore the slug first, so the URL is complete before any hashchange fires.
+      if (isArticle && !slug && history.state?.cmsArticleSlug) {
+        slug = history.state.cmsArticleSlug;
+        url.searchParams.set("slug", slug);
+        history.replaceState(history.state, "", url);
+      }
 
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+
+      if (isArticle) {
         if (slug) {
           loadCurrentArticle(slug);
         } else if (
@@ -1349,21 +1352,19 @@ import { markdownToHtml } from "./markdown.js";
         const slug = url.searchParams.get("slug");
 
         if (slug || url.searchParams.has("post")) {
-          // Preserve the article slug in this history entry.
+          // Remove CMS parameters without removing unrelated parameters,
+          // and keep the slug in this history entry's state in one step.
+          url.searchParams.delete("slug");
+          url.searchParams.delete("post");
+
           history.replaceState(
             {
               ...history.state,
               cmsArticleSlug: slug,
             },
             "",
-            window.location.href,
+            url,
           );
-
-          // Remove CMS parameters without removing unrelated parameters.
-          url.searchParams.delete("slug");
-          url.searchParams.delete("post");
-
-          history.replaceState(history.state, "", url);
         }
 
         if (rawHref === `#${config.selectors.articlesSection}`) {
