@@ -1166,6 +1166,7 @@ import { markdownToHtml } from "./markdown.js";
         }
 
         .pk-blog-post-navigation-next {
+          grid-column: 1;
           justify-self: start;
           text-align: left;
         }
