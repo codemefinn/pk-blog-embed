@@ -1163,11 +1163,12 @@ import { markdownToHtml } from "./markdown.js";
         .pk-blog-post-navigation {
           grid-template-columns: minmax(0, 1fr);
           gap: 0.85rem;
+          justify-items: center;
         }
 
         .pk-blog-post-navigation-next {
           grid-column: 1;
-          justify-self: end;
+          justify-self: center;
           text-align: left;
         }
       }
